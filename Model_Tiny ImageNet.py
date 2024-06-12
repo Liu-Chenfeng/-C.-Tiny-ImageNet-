@@ -31,14 +31,14 @@ DIR_TRAIN = DIR_MAIN + 'train\\'
 DIR_VAL = DIR_MAIN + 'val\\'
 DIR_TEST = DIR_MAIN + 'test\\'
 
-# Number of labels - 200
+# labels的数量 - 200
 labels = os.listdir(DIR_TRAIN)
 
-# Initialize labels encoder
+# 初始化标签编码器    Инициализируйте кодировщик этикеток
 encoder_labels = LabelEncoder()
 encoder_labels.fit(labels)
 
-# Create lists of files and labels for training (100'000 items)
+# 创建训练文件和标签的列表    Создавайте списки файлов и меток для обучения (100'000 items)
 files_train = []
 labels_train = []
 for label in labels:
@@ -46,7 +46,7 @@ for label in labels:
         files_train.append(DIR_TRAIN + label + '\\images\\' + filename)
         labels_train.append(label)
 
-# Create lists of files and labels for validation (10'000 items)
+# 创建验证文件和标签的列表    Создание списков файлов и меток для проверки (10'000 items)
 files_val = []
 labels_val = []
 for filename in os.listdir(DIR_VAL + 'images\\'):
@@ -58,7 +58,7 @@ for f in files_val:
     l = val_df.loc[val_df['File'] == f[len(DIR_VAL + 'images\\'):]]['Label'].values[0]
     labels_val.append(l)
 
-# List of files for testing (10'000 items)
+# 创建测试文件和标签的列表    Создание списков файлов для тестирования (10'000 items)
 files_test = []
 for filename in os.listdir(DIR_TEST + 'images\\'):
     files_test.append(DIR_TEST + 'images\\' + filename)
@@ -98,10 +98,9 @@ class ImagesDataset(Dataset):
             return x, self.files[index]
 
 
-# 图像归一化
+# 图像归一化    Нормализовать данные
 transforms_train = transforms.Compose([
     transforms.Resize((224, 224)),
-    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     transforms.RandomErasing(p=0.5, scale=(0.06, 0.08), ratio=(1, 3), value=0, inplace=True)
@@ -134,7 +133,6 @@ test_dataset = ImagesDataset(files=files_test,
                              mode='test')
 
 
-# DataLoader
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 valid_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
@@ -159,7 +157,6 @@ print(summary(model, input_size=(3, 32, 32)))
 # 损失函数和优化器
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0003)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.33)
 
 n_epochs = 15
 train_loss_list = []
