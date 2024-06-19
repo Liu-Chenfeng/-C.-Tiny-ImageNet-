@@ -18,6 +18,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import time
 from torchsummary import summary
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
 if torch.cuda.is_available():
@@ -233,6 +234,8 @@ for epoch in range(n_epochs):
         total_loss = 0
         correct = 0
         total = 0
+        all_preds = []
+        all_labels = []
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
@@ -244,11 +247,25 @@ for epoch in range(n_epochs):
             _, predicted = outputs.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
+            all_labels.extend(labels.cpu().numpy())
+            all_preds.extend(torch.argmax(outputs, 1).cpu().numpy())
         train_loss = total_loss / len(train_loader.dataset)
         train_accuracy = 100. * correct / total
         print(f"Train accuracy : {train_accuracy:.3f}%")
         train_loss_list.append(train_loss)
         train_acc_list.append(train_accuracy)
+
+        if epoch+1 == n_epochs:
+            cm_test = confusion_matrix(all_labels, all_preds)
+            fig, ax = plt.subplots(figsize=(85, 85))
+            disp_test = ConfusionMatrixDisplay(confusion_matrix=cm_test, display_labels=np.arange(cm_test.shape[0]))
+            disp_test.plot(ax=ax, cmap=plt.cm.Blues, xticks_rotation='vertical')
+            plt.title('CNN Training Confusion Matrix', fontsize=55)
+            plt.xlabel('Predicted Label', fontsize=35)
+            plt.ylabel('True Label', fontsize=35)
+            plt.savefig('CNN_Training_confusion_matrix.png', dpi=450, bbox_inches='tight')
+            plt.show()
+            
         return train_loss, train_accuracy
 
 
@@ -257,6 +274,8 @@ for epoch in range(n_epochs):
         val_loss = 0
         correct = 0
         total = 0
+        all_preds = []
+        all_labels = []
         with torch.no_grad():
             for inputs, labels in valid_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
@@ -266,11 +285,25 @@ for epoch in range(n_epochs):
                 _, predicted = outputs.max(1)
                 total += labels.size(0)
                 correct += predicted.eq(labels).sum().item()
+                all_labels.extend(labels.cpu().numpy())
+                all_preds.extend(torch.argmax(outputs, 1).cpu().numpy())
         valid_loss = val_loss / len(valid_loader.dataset)
         valid_accuracy = 100. * correct / total
         print(f"Validation accuracy : {valid_accuracy:.3f}%")
         valid_loss_list.append(valid_loss)
         valid_acc_list.append(valid_accuracy)
+
+        if epoch+1 == n_epochs:
+            cm_test = confusion_matrix(all_labels, all_preds)
+            fig, ax = plt.subplots(figsize=(85, 85))
+            disp_test = ConfusionMatrixDisplay(confusion_matrix=cm_test, display_labels=np.arange(cm_test.shape[0]))
+            disp_test.plot(ax=ax, cmap=plt.cm.Blues, xticks_rotation='vertical')
+            plt.title('CNN Validation Confusion Matrix', fontsize=55)
+            plt.xlabel('Predicted Label', fontsize=35)
+            plt.ylabel('True Label', fontsize=35)
+            plt.savefig('CNN_Validation_confusion_matrix.png', dpi=450, bbox_inches='tight')
+            plt.show()
+            
         return valid_loss, valid_accuracy
 
 
